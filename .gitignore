@@ -1,4 +1,7 @@
 appsettings.json
 bin/
 obj/
+.idea/
+*.sln.iml
+.DS_Store
 *.log
