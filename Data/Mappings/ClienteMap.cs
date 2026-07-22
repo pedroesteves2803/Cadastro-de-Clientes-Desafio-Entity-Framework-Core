@@ -27,8 +27,7 @@ public class ClienteMap : IEntityTypeConfiguration<Cliente>
 
         builder.Property(x => x.Telefone)
             .HasColumnName("Telefone")
-            .HasMaxLength(20)
-            .HasDefaultValue(null);
+            .HasMaxLength(20);
         
         builder.Property(x => x.DataDeCadastro)
             .HasColumnName("DataCadastro")

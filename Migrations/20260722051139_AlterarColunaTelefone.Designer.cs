@@ -4,6 +4,7 @@ using CadastroDeClientesDesafioEntityFrameworkCore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CadastroDeClientesDesafioEntityFrameworkCore.Migrations
 {
     [DbContext(typeof(CadastroClienteDataContext))]
-    partial class CadastroClienteDataContextModelSnapshot : ModelSnapshot
+    [Migration("20260722051139_AlterarColunaTelefone")]
+    partial class AlterarColunaTelefone
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

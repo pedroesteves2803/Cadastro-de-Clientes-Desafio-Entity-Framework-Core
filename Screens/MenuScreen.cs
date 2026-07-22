@@ -18,7 +18,7 @@ public static class MenuScreen
             Console.WriteLine("3 - Buscar cliente pelo ID");
             Console.WriteLine("4 - Atualizar cliente");
             Console.WriteLine("5 - Excluir cliente");
-            Console.WriteLine("6 - Sair");
+            Console.WriteLine("0 - Sair");
             Console.WriteLine();
 
             Console.Write("Escolha uma opção: ");
@@ -46,7 +46,7 @@ public static class MenuScreen
                     await ExcluirClienteAsync();
                     break;
                 
-                case "6":
+                case "0":
                     return;
                 
                 default:
@@ -69,8 +69,24 @@ public static class MenuScreen
         {
             Console.Write("Nome: ");
             var nome = Console.ReadLine()?.Trim();
+            
+            if (string.IsNullOrWhiteSpace(nome))
+            {
+                Console.WriteLine();
+                Console.WriteLine("Nome não pode ser vazio.");
+                return;
+            }
+            
             Console.Write("Email: ");
             var email = Console.ReadLine()?.Trim().ToLowerInvariant();
+            
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                Console.WriteLine();
+                Console.WriteLine("Email não pode ser vazio.");
+                return;
+            }
+            
             Console.Write("Telefone: ");
             var telefone = Console.ReadLine()?.Trim();
 
@@ -85,13 +101,17 @@ public static class MenuScreen
                 Console.WriteLine("Já existe um cliente com esse e-mail.");
                 return;
             }
-        
-            await context.Clientes.AddAsync(new Cliente
+
+            var cliente = new Cliente
             {
-                Nome =  nome,
+                Nome = nome,
                 Email = email,
-                Telefone = telefone
-            });
+                Telefone = string.IsNullOrWhiteSpace(telefone)
+                    ? null
+                    : telefone
+            };
+        
+            await context.Clientes.AddAsync(cliente);
             await context.SaveChangesAsync();
 
             Console.WriteLine();
@@ -223,11 +243,26 @@ public static class MenuScreen
             Console.Write($"Nome ({cliente.Nome}): ");
             var nome = Console.ReadLine()?.Trim();
 
+            if (string.IsNullOrWhiteSpace(nome))
+            {
+                nome = cliente.Nome;
+            }
+
             Console.Write($"E-mail ({cliente.Email}): ");
             var email = Console.ReadLine()?.Trim().ToLowerInvariant();
+            
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                email = cliente.Email;
+            }
 
             Console.Write($"Telefone ({cliente.Telefone}): ");
             var telefone = Console.ReadLine()?.Trim();
+            
+            if (string.IsNullOrWhiteSpace(telefone))
+            {
+                telefone = cliente.Telefone;
+            }
 
             var emailJaExiste = await context.Clientes.AnyAsync(x =>
                 x.Email == email && x.Id != id
@@ -274,6 +309,7 @@ public static class MenuScreen
             if (!int.TryParse(id, out var idCliente))
             {
                 Console.WriteLine("Digite um ID válido.");
+                return;
             }
             
             await using var context = new CadastroClienteDataContext();
@@ -286,11 +322,15 @@ public static class MenuScreen
                 return;
             }
             
-            context.Clientes.Remove(cliente);
-            await context.SaveChangesAsync();
-                
-            Console.WriteLine();
-            Console.WriteLine("Cliente removido com sucesso!");
+            Console.Write($"Deseja excluir ({cliente.Nome}) S/N?");
+
+            if (Console.ReadKey().Key == ConsoleKey.S)
+            {
+                context.Clientes.Remove(cliente);
+                await context.SaveChangesAsync();
+                Console.WriteLine();
+                Console.WriteLine("Cliente removido com sucesso!");
+            }
         }
         catch (DbUpdateException exception)
         {
