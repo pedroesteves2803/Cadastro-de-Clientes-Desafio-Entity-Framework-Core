@@ -122,7 +122,7 @@ public static class MenuScreen
             await using var context = new CadastroClienteDataContext();
             
             var clientes = await context.Clientes
-                .AsNoTracking(
+                .AsNoTracking()
                 .OrderBy(x => x.Nome)
                 .ToListAsync();
             
@@ -269,11 +269,16 @@ public static class MenuScreen
         try
         {
             Console.Write("ID: ");
-            var id = int.Parse(Console.ReadLine());
+            var id = Console.ReadLine();
+
+            if (!int.TryParse(id, out var idCliente))
+            {
+                Console.WriteLine("Digite um ID válido.");
+            }
             
             await using var context = new CadastroClienteDataContext();
             
-            var cliente = await context.Clientes.FirstOrDefaultAsync(x => x.Id == id);
+            var cliente = await context.Clientes.FirstOrDefaultAsync(x => x.Id == idCliente);
 
             if (cliente == null)
             {
