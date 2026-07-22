@@ -122,7 +122,8 @@ public static class MenuScreen
             await using var context = new CadastroClienteDataContext();
             
             var clientes = await context.Clientes
-                .AsNoTracking()
+                .AsNoTracking(
+                .OrderBy(x => x.Nome)
                 .ToListAsync();
             
             if (clientes.Count == 0)
