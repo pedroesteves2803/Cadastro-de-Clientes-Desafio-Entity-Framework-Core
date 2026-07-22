@@ -32,8 +32,7 @@ public class ClienteMap : IEntityTypeConfiguration<Cliente>
         
         builder.Property(x => x.DataDeCadastro)
             .HasColumnName("DataCadastro")
-            .HasColumnType("datetime")
-            .HasDefaultValueSql("(getdate())")
+            .HasColumnType("datetime2")
             .IsRequired();
     }
 }

@@ -10,6 +10,5 @@ public class Cliente
 
     public string Telefone { get; set; } = string.Empty;
 
-    public DateTime DataDeCadastro { get; set; }
-    
+    public DateTime DataDeCadastro { get; set; } = DateTime.Now;    
 }
