@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CadastroDeClientesDesafioEntityFrameworkCore.Screens;
 
-public static class MenuScreen
+public static class MenuClienteScreen
 {
     public static async Task ShowAsync()    
     {
@@ -18,7 +18,7 @@ public static class MenuScreen
             Console.WriteLine("3 - Buscar cliente pelo ID");
             Console.WriteLine("4 - Atualizar cliente");
             Console.WriteLine("5 - Excluir cliente");
-            Console.WriteLine("0 - Sair");
+            Console.WriteLine("0 - Voltar");
             Console.WriteLine();
 
             Console.Write("Escolha uma opção: ");
