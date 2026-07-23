@@ -8,6 +8,7 @@ namespace CadastroDeClientesDesafioEntityFrameworkCore.Data;
 public class CadastroClienteDataContext: DbContext
 {
     public DbSet<Cliente> Clientes { get; set; }
+    public DbSet<Endereco> Enderecos { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -28,5 +29,6 @@ public class CadastroClienteDataContext: DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new ClienteMap());
+        modelBuilder.ApplyConfiguration(new EnderecoMap());
     }
 }
