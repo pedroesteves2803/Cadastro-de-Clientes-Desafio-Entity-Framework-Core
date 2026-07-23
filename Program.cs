@@ -9,7 +9,7 @@ while (true)
     Console.WriteLine("2 - Endereco");
     Console.WriteLine("0 - Sair");
 
-    Console.Write("Selecione uma opção:");
+    Console.Write("Selecione uma opção: ");
     var opcao = Console.ReadLine();
     
     switch (opcao)
