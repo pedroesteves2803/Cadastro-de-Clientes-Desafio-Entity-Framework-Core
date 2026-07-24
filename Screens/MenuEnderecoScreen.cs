@@ -18,6 +18,7 @@ public static class MenuEnderecoScreen
             Console.WriteLine("3 - Listar enderecos do cliente");
             Console.WriteLine("4 - Atualiza endereco");
             Console.WriteLine("5 - Excluir endereco");
+            Console.WriteLine("6 - Listar enderecos por cidade");
             Console.WriteLine("0 - Voltar");
             Console.WriteLine();
 
@@ -46,6 +47,10 @@ public static class MenuEnderecoScreen
                     await ExcluirEnderecoAsync();
                     break;
                 
+                case "6":
+                    await ListarEnderecoPelaCidadeAsync();
+                    break;
+                
                 case "0":
                 return;
                 
@@ -72,7 +77,7 @@ public static class MenuEnderecoScreen
                 return;
             }
             await using var context = new CadastroClienteDataContext();
-            var cliente = await context.Clientes.FirstOrDefaultAsync(x => x.Id == idCliente);
+            var cliente = await context.Clientes.FindAsync(idCliente);
 
             if (cliente == null)
             {
@@ -183,7 +188,7 @@ public static class MenuEnderecoScreen
             
             var enderecos =  await context.Enderecos.ToListAsync();
             
-            if (enderecos.Count == 0)
+            if (!enderecos.Any())
             {
                 Console.WriteLine("Nenhum endereço cadastrado.");
                 return;
@@ -232,7 +237,7 @@ public static class MenuEnderecoScreen
                 return;
             }
             
-            if (cliente.Enderecos.Count == 0)
+            if (!cliente.Enderecos.Any())
             {
                 Console.WriteLine("Este cliente não possui endereços.");
                 return;
@@ -271,7 +276,7 @@ public static class MenuEnderecoScreen
             }
             await using var context = new CadastroClienteDataContext();
             var endereco = await context.Enderecos
-                .FirstOrDefaultAsync(x => x.Id == idEndereco);
+                .FindAsync(idEndereco);
             
             if (endereco is null)
             {
@@ -371,7 +376,7 @@ public static class MenuEnderecoScreen
             
             await using var context = new CadastroClienteDataContext();
             
-            var endereco =  await context.Enderecos.FirstOrDefaultAsync(x => x.Id == idEndereco);
+            var endereco =  await context.Enderecos.FindAsync(idEndereco);
 
             if (endereco is null)
             {
@@ -392,7 +397,7 @@ public static class MenuEnderecoScreen
         catch (DbUpdateException exception)
         {
             Console.WriteLine();
-            Console.WriteLine("Não foi possível atualizar o endereco do cliente");
+            Console.WriteLine("Não foi possível excluir o endereço do cliente.");
             Console.WriteLine(exception.InnerException?.Message);
         }
         catch (Exception exception)
@@ -401,7 +406,54 @@ public static class MenuEnderecoScreen
             Console.WriteLine("Ocorreu um erro inesperado.");
         }
     }
-    
+
+    private static async Task ListarEnderecoPelaCidadeAsync()
+    {
+        Console.Clear();
+        Console.WriteLine("Listar endereco do cliente pela cidade");
+        Console.WriteLine();
+
+        try
+        {
+            Console.Write("Cidade: ");
+            var cidade = Console.ReadLine();
+            
+            if (string.IsNullOrWhiteSpace(cidade))
+            {
+                Console.WriteLine("Cidade não pode ser vazia.");
+                return;
+            }
+
+            using var context = new CadastroClienteDataContext();
+            
+            cidade = cidade.Trim();
+
+            var enderecos = await context.Enderecos
+                .Where(x => x.Cidade == cidade)
+                .OrderBy(x => x.Rua)
+                .ToListAsync();
+
+            if (!enderecos.Any())
+            {
+                Console.WriteLine("Endereço não encontrado.");
+                return;
+            }
+            
+            foreach (var endereco in enderecos)
+                Console.WriteLine($"ID: {endereco.Id} - Cep: {endereco.Cep} - Cidade: {endereco.Cidade} - Rua: {endereco.Rua}");
+        }
+        catch (DbUpdateException exception)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Não foi possível excluir o endereço do cliente.");
+            Console.WriteLine(exception.InnerException?.Message);
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Ocorreu um erro inesperado.");
+        }
+    }
     
     private static void AguardarContinuacao()
     {
