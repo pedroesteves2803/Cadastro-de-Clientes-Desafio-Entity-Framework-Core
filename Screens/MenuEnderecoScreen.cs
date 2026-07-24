@@ -39,7 +39,7 @@ public static class MenuEnderecoScreen
                     break;
                 
                 case "4":
-                    await AtualizaEnderecoAsync();
+                    await AtualizarEnderecoAsync();
                     break;
                 
                 case "5":
@@ -89,6 +89,14 @@ public static class MenuEnderecoScreen
                 return;
             }
             
+            cep = cep.Replace("-", "").Trim();
+
+            if (cep.Length != 8 || !cep.All(char.IsDigit))
+            {
+                Console.WriteLine("CEP inválido. Digite exatamente 8 números.");
+                return;
+            }
+            
             Console.Write("Rua: ");
             var rua = Console.ReadLine();
             if (string.IsNullOrWhiteSpace(rua))
@@ -113,6 +121,7 @@ public static class MenuEnderecoScreen
             {
                 Console.WriteLine();
                 Console.WriteLine("Bairro nao pode ser vazio.");
+                return;
             }
             
             Console.Write("Cidade: ");
@@ -121,6 +130,7 @@ public static class MenuEnderecoScreen
             {
                 Console.WriteLine();
                 Console.WriteLine("Cidade nao pode ser vazio.");
+                return;
             }
             
             Console.Write("Estado: ");
@@ -129,6 +139,7 @@ public static class MenuEnderecoScreen
             {
                 Console.WriteLine();
                 Console.WriteLine("Estado nao pode ser vazio.");
+                return;
             }
             
             await context.Enderecos.AddAsync(new Endereco
@@ -171,6 +182,12 @@ public static class MenuEnderecoScreen
             await using var context = new CadastroClienteDataContext();
             
             var enderecos =  await context.Enderecos.ToListAsync();
+            
+            if (enderecos.Count == 0)
+            {
+                Console.WriteLine("Nenhum endereço cadastrado.");
+                return;
+            }
 
             foreach (var endereco in enderecos)
                 Console.WriteLine($"ID: {endereco.Id} - Cep: {endereco.Cep} - Rua: {endereco.Rua}");
@@ -215,6 +232,12 @@ public static class MenuEnderecoScreen
                 return;
             }
             
+            if (cliente.Enderecos.Count == 0)
+            {
+                Console.WriteLine("Este cliente não possui endereços.");
+                return;
+            }
+            
             foreach (var endereco in cliente.Enderecos)
                 Console.WriteLine($"ID: {endereco.Id} - Cep: {endereco.Cep} - Rua: {endereco.Rua}");
         }
@@ -232,7 +255,7 @@ public static class MenuEnderecoScreen
         }
     }
 
-    private static async Task AtualizaEnderecoAsync()
+    private static async Task AtualizarEnderecoAsync()
     {
         Console.Clear();
         Console.WriteLine("Atualização de endereco do cliente");
@@ -261,6 +284,14 @@ public static class MenuEnderecoScreen
             if (string.IsNullOrWhiteSpace(cep))
             {
                 cep = endereco.Cep;
+            }
+            
+            cep = cep.Replace("-", "").Trim();
+
+            if (cep.Length != 8 || !cep.All(char.IsDigit))
+            {
+                Console.WriteLine("CEP inválido. Digite exatamente 8 números.");
+                return;
             }
             
             Console.Write($"Rua ({endereco.Rua}): ");
@@ -305,7 +336,6 @@ public static class MenuEnderecoScreen
             endereco.Cidade = cidade;
             endereco.Estado = estado;
             
-            context.Enderecos.Update(endereco);
             await context.SaveChangesAsync();
 
             Console.WriteLine();
