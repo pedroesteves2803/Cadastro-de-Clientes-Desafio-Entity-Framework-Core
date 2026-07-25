@@ -19,6 +19,9 @@ public static class MenuEnderecoScreen
             Console.WriteLine("4 - Atualiza endereco");
             Console.WriteLine("5 - Excluir endereco");
             Console.WriteLine("6 - Listar enderecos por cidade");
+            Console.WriteLine("7 - Listar enderecos ordenados");
+            Console.WriteLine("8 - Listar cep e rua de enderecos");
+            Console.WriteLine("9 - Listar quantidade de enderecos dos clientes");
             Console.WriteLine("0 - Voltar");
             Console.WriteLine();
 
@@ -49,6 +52,18 @@ public static class MenuEnderecoScreen
                 
                 case "6":
                     await ListarEnderecoPelaCidadeAsync();
+                    break;
+                
+                case "7":
+                    await ListarEnderecosOrdenadosAsync();
+                    break;
+                
+                case "8":   
+                    await ListarResumoDosEnderecosAsync();
+                    break;
+                    
+                case "9":
+                    await ListarQuantidadeDeEnderecosPorClienteAsync();
                     break;
                 
                 case "0":
@@ -186,7 +201,9 @@ public static class MenuEnderecoScreen
         {
             await using var context = new CadastroClienteDataContext();
             
-            var enderecos =  await context.Enderecos.ToListAsync();
+            var enderecos =  await context.Enderecos
+                .AsNoTracking()
+                .ToListAsync();
             
             if (!enderecos.Any())
             {
@@ -228,6 +245,7 @@ public static class MenuEnderecoScreen
             
             await using var context = new CadastroClienteDataContext();
             var cliente = await context.Clientes
+                .AsNoTracking()
                 .Include(c => c.Enderecos)
                 .FirstOrDefaultAsync(c => c.Id == idCliente);
 
@@ -430,6 +448,7 @@ public static class MenuEnderecoScreen
 
             var enderecos = await context.Enderecos
                 .Where(x => x.Cidade == cidade)
+                .AsNoTracking()
                 .OrderBy(x => x.Rua)
                 .ToListAsync();
 
@@ -453,6 +472,130 @@ public static class MenuEnderecoScreen
             Console.WriteLine();
             Console.WriteLine("Ocorreu um erro inesperado.");
         }
+    }
+
+    private static async Task ListarEnderecosOrdenadosAsync()
+    {
+        Console.Clear();
+        Console.WriteLine("Listar enderecos ordenados");
+        Console.WriteLine();
+
+        try
+        {
+            using var context = new  CadastroClienteDataContext();
+
+            var enderecos = await context.Enderecos
+                .AsNoTracking()
+                .OrderBy(x => x.Estado)
+                .ThenBy(x => x.Cidade)
+                .ThenBy(x => x.Rua)
+                .ToListAsync();
+
+            if (!enderecos.Any())
+            {
+                Console.WriteLine("Nenhum endereço cadastrado.");
+                return;
+            }
+
+            foreach (var endereco in enderecos)
+                Console.WriteLine($"ID: {endereco.Id} - Estado: {endereco.Estado} - Cidade: {endereco.Cidade} - Rua: {endereco.Rua}");
+
+        }
+        catch (DbUpdateException exception)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Não foi possível listar os endereços ordenados.");
+            Console.WriteLine(exception.InnerException?.Message);
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Ocorreu um erro inesperado.");
+        }
+    }
+
+    private static async Task ListarResumoDosEnderecosAsync()
+    {
+        Console.Clear();
+        Console.WriteLine("Listar cep e rua do endereco pela");
+        Console.WriteLine();
+
+        try
+        {
+            using var context = new CadastroClienteDataContext();
+
+            var enderecos = await context.Enderecos
+                .Select(x => new
+                {
+                    x.Cep,
+                    x.Rua
+                })
+                .AsNoTracking()
+                .ToListAsync();
+            
+            if (!enderecos.Any())
+            {
+                Console.WriteLine("Nenhum endereço encontrado.");
+                return;
+            }
+            
+            foreach (var endereco in enderecos)
+                Console.WriteLine($"Cep: {endereco.Cep} - Rua: {endereco.Rua}");
+        }
+        catch (DbUpdateException exception)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Não foi possível listar o cep e a rua dos endereços.");
+            Console.WriteLine(exception.InnerException?.Message);
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Ocorreu um erro inesperado.");
+        }
+    }
+
+    private static async Task ListarQuantidadeDeEnderecosPorClienteAsync()
+    {
+        Console.Clear();
+        Console.WriteLine("Quantidade de endereços por cliente");
+        Console.WriteLine();
+
+        try
+        {
+            using var context =  new CadastroClienteDataContext();
+
+            var clientes = await context.Clientes
+                .Select(x => new
+                {
+                    x.Nome,
+                    QuantidadeDeEndereco = x.Enderecos.Count
+                })
+                .OrderByDescending(x => x.QuantidadeDeEndereco)
+                .ThenBy(x => x.Nome)
+                .ToListAsync();
+            
+            if (!clientes.Any())
+            {
+                Console.WriteLine("Nenhum cliente cadastrado.");
+                return;
+            }
+
+            foreach (var cliente in clientes)
+                Console.WriteLine($"Nome: {cliente.Nome} - {cliente.QuantidadeDeEndereco}");
+        }
+        catch (DbUpdateException exception)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Não foi possível listar a quantidade de endereços por cliente.");
+            Console.WriteLine(exception.InnerException?.Message);
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Ocorreu um erro inesperado.");
+        }
+        
     }
     
     private static void AguardarContinuacao()
