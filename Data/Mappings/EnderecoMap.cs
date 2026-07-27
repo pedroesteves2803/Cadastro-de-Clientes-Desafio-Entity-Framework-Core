@@ -43,6 +43,7 @@ public class EnderecoMap : IEntityTypeConfiguration<Endereco>
             .IsRequired();
 
         builder.HasOne(x => x.Cliente)
-            .WithMany(x => x.Enderecos);
+            .WithMany(x => x.Enderecos)
+            .HasForeignKey(x => x.ClienteId);
     }
 }
