@@ -2,6 +2,7 @@ using CadastroDeClientesDesafioEntityFrameworkCore.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+namespace CadastroDeClientesDesafioEntityFrameworkCore.Data.Mappings;
 
 public class EnderecoMap : IEntityTypeConfiguration<Endereco>
 {

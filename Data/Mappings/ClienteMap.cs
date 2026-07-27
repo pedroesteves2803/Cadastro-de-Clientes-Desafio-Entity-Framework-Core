@@ -1,7 +1,8 @@
+using CadastroDeClientesDesafioEntityFrameworkCore.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace CadastroDeClientesDesafioEntityFrameworkCore.Models.Mappings;
+namespace CadastroDeClientesDesafioEntityFrameworkCore.Data.Mappings;
 
 public class ClienteMap : IEntityTypeConfiguration<Cliente>
 {

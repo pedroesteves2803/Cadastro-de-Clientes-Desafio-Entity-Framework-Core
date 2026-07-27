@@ -1,5 +1,5 @@
+using CadastroDeClientesDesafioEntityFrameworkCore.Data.Mappings;
 using CadastroDeClientesDesafioEntityFrameworkCore.Models;
-using CadastroDeClientesDesafioEntityFrameworkCore.Models.Mappings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
