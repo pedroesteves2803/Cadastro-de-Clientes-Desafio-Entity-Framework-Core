@@ -126,8 +126,8 @@ antes de introduzir Repository Pattern, Service Layer ou outras abstrações.
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/pedroesteves2803/Cadastro-de-Clientes---Desafio-Entity-Framework-Core.git
-cd Cadastro-de-Clientes---Desafio-Entity-Framework-Core
+git clone https://github.com/pedroesteves2803/cadastro-clientes-ef-core.git
+cd cadastro-clientes-ef-core
 ```
 
 ### 2. Configure a conexão
