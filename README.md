@@ -196,5 +196,4 @@ dotnet build
 ## Status
 
 Projeto concluído como exercício de fundamentos do Entity Framework Core e
-LINQ. Melhorias mais avançadas de arquitetura foram deixadas para outros
-projetos, depois da consolidação do acesso a dados.
+LINQ.
