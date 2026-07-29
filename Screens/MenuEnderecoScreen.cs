@@ -22,6 +22,9 @@ public static class MenuEnderecoScreen
             Console.WriteLine("7 - Listar enderecos ordenados");
             Console.WriteLine("8 - Listar cep e rua de enderecos");
             Console.WriteLine("9 - Listar quantidade de enderecos dos clientes");
+            Console.WriteLine("10 - Listar clientes com enderecos");
+            Console.WriteLine("11 - Listar clientes sem  enderecos");
+            Console.WriteLine("12 - Comparar include X select");
             Console.WriteLine("0 - Voltar");
             Console.WriteLine();
 
@@ -66,6 +69,18 @@ public static class MenuEnderecoScreen
                     await ListarQuantidadeDeEnderecosPorClienteAsync();
                     break;
                 
+                case "10":
+                    await ListarClientesComEnderecosAsync();
+                    break;
+
+                case "11":
+                    await ListarClientesSemEnderecosAsync();
+                    break;
+
+                case "12":
+                    await CompararIncludeESelectAsync();
+                    break;
+
                 case "0":
                 return;
                 
@@ -374,6 +389,7 @@ public static class MenuEnderecoScreen
         {
             Console.WriteLine();
             Console.WriteLine("Ocorreu um erro inesperado.");
+            Console.WriteLine(exception.Message);
         }
     }
 
@@ -422,6 +438,7 @@ public static class MenuEnderecoScreen
         {
             Console.WriteLine();
             Console.WriteLine("Ocorreu um erro inesperado.");
+            Console.WriteLine(exception.Message);
         }
     }
 
@@ -471,6 +488,7 @@ public static class MenuEnderecoScreen
         {
             Console.WriteLine();
             Console.WriteLine("Ocorreu um erro inesperado.");
+            Console.WriteLine(exception.Message);
         }
     }
 
@@ -511,6 +529,7 @@ public static class MenuEnderecoScreen
         {
             Console.WriteLine();
             Console.WriteLine("Ocorreu um erro inesperado.");
+            Console.WriteLine(exception.Message);
         }
     }
 
@@ -552,6 +571,7 @@ public static class MenuEnderecoScreen
         {
             Console.WriteLine();
             Console.WriteLine("Ocorreu um erro inesperado.");
+            Console.WriteLine(exception.Message);
         }
     }
 
@@ -577,7 +597,7 @@ public static class MenuEnderecoScreen
             
             if (!clientes.Any())
             {
-                Console.WriteLine("Nenhum cliente cadastrado.");
+                Console.WriteLine("Nenhum cliente com endereço encontrado.");
                 return;
             }
 
@@ -594,9 +614,188 @@ public static class MenuEnderecoScreen
         {
             Console.WriteLine();
             Console.WriteLine("Ocorreu um erro inesperado.");
+            Console.WriteLine(exception.Message);
         }
         
     }
+
+    private static async Task ListarClientesComEnderecosAsync()
+    {
+        Console.Clear();
+        Console.WriteLine("Clientes com endereco");
+        Console.WriteLine();
+
+        try
+        {
+            using var context =  new CadastroClienteDataContext();
+
+            var clientes = await context.Clientes
+                .Where(x => x.Enderecos.Any())
+                .Select(x => new
+                {
+                    x.Nome,
+                    Enderecos = x.Enderecos
+                        .Select(e => new
+                        {
+                            e.Estado,
+                            e.Cidade,
+                            e.Rua
+                        })
+                        .ToList()
+                })
+                .AsNoTracking()
+                .OrderBy(x => x.Nome)
+                .ToListAsync();
+
+            if (!clientes.Any())
+            {
+                Console.WriteLine("Nenhum cliente sem endereço encontrado.");
+                return;
+            }
+
+            foreach (var cliente in clientes)
+            {
+                Console.WriteLine($"Nome: {cliente.Nome}");
+
+                foreach (var endereco in cliente.Enderecos)
+                    Console.WriteLine($"Estado: {endereco.Estado} - Cidade: {endereco.Cidade} - Rua: {endereco.Rua}");
+            }
+        }
+        catch (DbUpdateException exception)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Não foi possível listar a clientes com endereco.");
+            Console.WriteLine(exception.InnerException?.Message);
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Ocorreu um erro inesperado.");
+            Console.WriteLine(exception.Message);
+        }
+    }
+
+    private static async Task ListarClientesSemEnderecosAsync()
+    {
+        Console.Clear();
+        Console.WriteLine("Clientes sem endereco");
+        Console.WriteLine();
+
+        try
+        {
+            using var context =  new CadastroClienteDataContext();
+
+            var clientes = await context.Clientes
+                .Where(x => !x.Enderecos.Any())
+                .Select(x => new
+                {
+                    x.Nome
+                })
+                .AsNoTracking()
+                .OrderBy(x => x.Nome)
+                .ToListAsync();
+
+            if (!clientes.Any())
+            {
+                Console.WriteLine("Nenhum cliente cadastrado.");
+                return;
+            }
+
+            foreach (var cliente in clientes)
+            {
+                Console.WriteLine($"Nome: {cliente.Nome}");
+            }
+        }
+        catch (DbUpdateException exception)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Não foi possível listar a clientes sem endereco.");
+            Console.WriteLine(exception.InnerException?.Message);
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Ocorreu um erro inesperado.");
+            Console.WriteLine(exception.Message);
+        }
+    }
+
+    private static async Task CompararIncludeESelectAsync()
+    {
+        Console.Clear();
+        Console.WriteLine("Comparação entre Include e Select");
+        Console.WriteLine();
+
+        Console.Write("ID do cliente: ");
+        if (!int.TryParse(Console.ReadLine(), out var clienteId))
+        {
+            Console.WriteLine("ID inválido.");
+            return;
+        }
+
+        await using var context = new CadastroClienteDataContext();
+
+        var consultaComInclude = context.Clientes
+            .AsNoTracking()
+            .Include(c => c.Enderecos)
+            .Where(c => c.Id == clienteId);
+
+        Console.WriteLine("SQL COM INCLUDE");
+        Console.WriteLine(consultaComInclude.ToQueryString());
+        Console.WriteLine();
+
+        var clienteComInclude = await consultaComInclude
+            .FirstOrDefaultAsync();
+
+        var consultaComSelect = context.Clientes
+            .AsNoTracking()
+            .Where(c => c.Id == clienteId)
+            .Select(c => new
+            {
+                c.Nome,
+                Enderecos = c.Enderecos
+                    .Select(e => new
+                    {
+                        e.Rua,
+                        e.Numero
+                    })
+                    .ToList()
+            });
+
+        Console.WriteLine("SQL COM SELECT");
+        Console.WriteLine(consultaComSelect.ToQueryString());
+        Console.WriteLine();
+
+        var clienteComSelect = await consultaComSelect
+            .FirstOrDefaultAsync();
+
+        Console.WriteLine("Resultado com Include:");
+
+        if (clienteComInclude is not null)
+        {
+            Console.WriteLine(clienteComInclude.Nome);
+
+            foreach (var endereco in clienteComInclude.Enderecos)
+            {
+                Console.WriteLine($"{endereco.Rua}, {endereco.Numero}");
+            }
+        }
+
+        Console.WriteLine();
+
+        Console.WriteLine("Resultado com Select:");
+
+        if (clienteComSelect is not null)
+        {
+            Console.WriteLine(clienteComSelect.Nome);
+
+            foreach (var endereco in clienteComSelect.Enderecos)
+            {
+                Console.WriteLine($"{endereco.Rua}, {endereco.Numero}");
+            }
+        }
+    }
+
     
     private static void AguardarContinuacao()
     {

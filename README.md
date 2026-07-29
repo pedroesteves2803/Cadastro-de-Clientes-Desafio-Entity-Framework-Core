@@ -1,325 +1,200 @@
-# Cadastro de Clientes - Desafio Entity Framework Core
+# Cadastro de Clientes com Entity Framework Core
 
-## Objetivo
+Projeto de estudo desenvolvido em C# para praticar o uso do Entity Framework
+Core com SQL Server. A aplicação roda no console e permite gerenciar clientes
+e seus endereços.
 
-Este projeto tem como objetivo praticar os fundamentos do **Entity Framework Core** utilizando **C#**, desenvolvendo uma aplicação Console simples para gerenciamento de clientes.
+O objetivo deste repositório é registrar minha evolução com acesso a dados:
+comecei com um CRUD simples de clientes e depois adicionei um relacionamento
+1:N, novas migrations e consultas LINQ um pouco mais elaboradas.
 
-O foco não é criar um sistema completo, mas entender todo o fluxo de comunicação entre a aplicação e o banco de dados.
+## Funcionalidades
 
-Ao final deste desafio você deverá compreender:
+### Clientes
 
-* O que é uma Entidade (Entity)
-* O que é um `DbContext`
-* O que é um `DbSet`
-* Como funciona o Fluent API (Mapping)
-* Como criar e executar Migrations
-* Como salvar dados no banco
-* Como consultar dados utilizando LINQ
-* Como realizar um CRUD completo utilizando Entity Framework Core
+- Cadastro com validação de nome, email e telefone.
+- Listagem ordenada por nome.
+- Busca por ID.
+- Atualização dos dados.
+- Exclusão com confirmação.
+- Validação de email único.
 
----
+### Endereços
 
-# Tecnologias
+- Cadastro de endereço para um cliente existente.
+- Listagem geral e por cliente.
+- Atualização e exclusão.
+- Busca por cidade.
+- Ordenação por estado, cidade e rua.
+- Projeção de campos específicos.
+- Contagem de endereços por cliente.
+- Listagem de clientes com e sem endereço.
+- Comparação do SQL gerado por `Include()` e `Select()`.
 
-* .NET
-* C#
-* Entity Framework Core
-* SQL Server
-* Fluent API
-* LINQ
-* Console Application
+## Modelo de dados
 
----
-
-# Objetivos de Aprendizagem
-
-Ao concluir este projeto você deverá ser capaz de responder:
-
-* Como o Entity Framework conversa com o banco?
-* Qual a função do DbContext?
-* Para que serve um DbSet?
-* O que é uma Migration?
-* Como o EF sabe qual tabela utilizar?
-* Como inserir, atualizar, consultar e remover dados?
-
----
-
-# Estrutura Esperada
+O projeto possui um relacionamento de um para muitos:
 
 ```text
-CadastroDeClientes
-│
+Cliente (1) ────────── (N) Endereco
+                         ClienteId
+```
+
+`Endereco.ClienteId` é a chave estrangeira que referencia `Cliente.Id`. O
+relacionamento foi configurado com Fluent API por meio de
+`HasOne()`, `WithMany()` e `HasForeignKey()`.
+
+As entidades possuem propriedades de navegação nos dois sentidos:
+
+- `Cliente.Enderecos` representa a coleção de endereços do cliente.
+- `Endereco.Cliente` representa o cliente ao qual o endereço pertence.
+
+A migration do relacionamento utiliza exclusão em cascata. Portanto, ao
+excluir um cliente, seus endereços também são removidos pelo banco.
+
+## Conceitos praticados
+
+- `DbContext` e `DbSet`.
+- Fluent API e classes de mapping.
+- Migrations.
+- Chave primária, chave estrangeira e índice único.
+- Relacionamento 1:N.
+- Propriedades de navegação.
+- Change Tracking e `AsNoTracking()`.
+- Consultas LINQ traduzidas para SQL.
+- Execução assíncrona com `async`/`await`.
+- `FindAsync()`, `FirstOrDefaultAsync()`, `AnyAsync()` e `ToListAsync()`.
+- `Where()`, `OrderBy()`, `ThenBy()`, `Select()` e `Count`.
+- Carregamento relacionado com `Include()`.
+- Projeções para retornar apenas os campos necessários.
+- Inspeção do SQL com `ToQueryString()`.
+
+## Include e Select
+
+Uma das consultas do projeto recupera o mesmo cliente e seus endereços de
+duas formas para permitir a comparação do SQL:
+
+- `Include()` retorna as entidades completas de cliente e endereço.
+- `Select()` cria uma projeção somente com nome, rua e número.
+
+Quando a aplicação precisa trabalhar com as entidades completas, `Include()`
+é uma opção direta. Quando precisa apenas de alguns dados para leitura, a
+projeção evita que colunas desnecessárias sejam retornadas.
+
+## Estrutura
+
+```text
+.
 ├── Data
-│   ├── CadastroDataContext.cs
+│   ├── CadastroClienteDataContext.cs
 │   └── Mappings
-│       └── ClienteMap.cs
-│
+│       ├── ClienteMap.cs
+│       └── EnderecoMap.cs
+├── Migrations
 ├── Models
-│   └── Cliente.cs
-│
+│   ├── Cliente.cs
+│   └── Endereco.cs
 ├── Screens
-│   └── MenuScreen.cs
-│
-└── Program.cs
+│   ├── MenuClienteScreen.cs
+│   └── MenuEnderecoScreen.cs
+├── Program.cs
+├── appsettings.example.json
+└── CadastroDeClientesDesafioEntityFrameworkCore.csproj
 ```
 
----
+O acesso ao `DbContext` permanece direto nas telas de console. Isso foi
+intencional: nesta etapa, o foco era compreender o comportamento do EF Core
+antes de introduzir Repository Pattern, Service Layer ou outras abstrações.
 
-# Funcionalidades
+## Tecnologias
 
-O sistema deverá permitir:
+- .NET 10
+- C#
+- Entity Framework Core 10
+- SQL Server
+- Microsoft.EntityFrameworkCore.SqlServer
+- Microsoft.EntityFrameworkCore.Design
 
-* Cadastrar cliente
-* Listar clientes
-* Buscar cliente pelo ID
-* Atualizar cliente
-* Excluir cliente
+## Como executar
 
----
+### Pré-requisitos
 
-# Entidade Cliente
+- .NET 10 SDK.
+- SQL Server disponível localmente ou em container.
+- Ferramenta `dotnet-ef`.
 
-A entidade deverá possuir os seguintes campos:
+### 1. Clone o repositório
 
-| Campo        | Tipo     | Regras                                    |
-| ------------ | -------- | ----------------------------------------- |
-| Id           | int      | Chave primária, auto incremento           |
-| Nome         | string   | Obrigatório, máximo 100 caracteres        |
-| Email        | string   | Obrigatório, máximo 150 caracteres, único |
-| Telefone     | string   | Opcional, máximo 20 caracteres            |
-| DataCadastro | DateTime | Obrigatório                               |
-
----
-
-# Regras de Banco
-
-Configure utilizando Fluent API:
-
-* Tabela chamada **Cliente**
-* Chave primária
-* Identity para Id
-* Nome obrigatório
-* Email obrigatório
-* Índice único para Email
-* Tamanho máximo dos campos
-* DataCadastro obrigatória
-
-Não utilize Data Annotations.
-
----
-
-# Banco de Dados
-
-Utilize SQL Server.
-
-Crie uma Migration chamada:
-
-```
-InitialCreate
+```bash
+git clone https://github.com/pedroesteves2803/Cadastro-de-Clientes---Desafio-Entity-Framework-Core.git
+cd Cadastro-de-Clientes---Desafio-Entity-Framework-Core
 ```
 
-Depois execute a atualização do banco.
+### 2. Configure a conexão
 
-Ao finalizar deverão existir pelo menos as tabelas:
+Copie `appsettings.example.json` para `appsettings.json` e informe os dados da
+sua instância do SQL Server:
 
-* Cliente
-* __EFMigrationsHistory
-
----
-
-# Menu
-
-O sistema deverá apresentar:
-
-```
-================================
-CADASTRO DE CLIENTES
-================================
-1 - Cadastrar cliente
-2 - Listar clientes
-3 - Buscar cliente pelo ID
-4 - Atualizar cliente
-5 - Excluir cliente
-0 - Sair
-================================
-Escolha uma opção:
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost,1433;Database=CadastroClientes;User ID=sa;Password=SUA_SENHA;TrustServerCertificate=True"
+  }
+}
 ```
 
----
+Não envie credenciais reais para o repositório.
 
-# Regras do CRUD
+### 3. Restaure os pacotes e crie o banco
 
-## Cadastro
-
-Solicitar:
-
-* Nome
-* Email
-* Telefone
-
-Validações:
-
-* Nome obrigatório
-* Email obrigatório
-* Email não pode existir
-
-Ao cadastrar corretamente:
-
-```
-Cliente cadastrado com sucesso.
+```bash
+dotnet restore
+dotnet ef database update
 ```
 
----
+### 4. Execute
 
-## Listagem
-
-Listar todos os clientes ordenados pelo nome.
-
-Caso não existam registros:
-
-```
-Nenhum cliente cadastrado.
+```bash
+dotnet run
 ```
 
----
+## Migrations
 
-## Busca
+O histórico do projeto mostra a evolução do modelo:
 
-Buscar pelo ID.
+1. Criação da tabela de clientes.
+2. Ajuste do tipo de `DataCadastro`.
+3. Alteração de telefone para campo opcional.
+4. Criação da tabela de endereços e da chave estrangeira.
 
-Caso não exista:
+Para conferir se o modelo possui alterações ainda não representadas por uma
+migration:
 
-```
-Cliente não encontrado.
-```
-
----
-
-## Atualização
-
-Permitir alterar:
-
-* Nome
-* Email
-* Telefone
-
-Validar novamente:
-
-* Nome obrigatório
-* Email obrigatório
-* Email único
-
----
-
-## Exclusão
-
-Antes de excluir solicitar confirmação.
-
-```
-Deseja realmente excluir este cliente? (S/N)
+```bash
+dotnet ef migrations has-pending-model-changes
 ```
 
----
+## Validação
 
-# Regras Técnicas
+Os fluxos foram exercitados manualmente pelo menu da aplicação, incluindo:
 
-Durante o desenvolvimento utilize:
+- Campos obrigatórios vazios.
+- Email duplicado.
+- IDs inválidos e registros inexistentes.
+- Cliente com vários endereços.
+- Cliente sem endereço.
+- Atualização e exclusão.
+- Integridade da chave estrangeira.
+- Exclusão em cascata.
 
-* async/await
-* SaveChangesAsync()
-* ToListAsync()
-* AnyAsync()
-* FindAsync() ou FirstOrDefaultAsync()
-* await using para o DbContext
-* int.TryParse para leitura do ID
+O projeto pode ser validado com:
 
-Evite utilizar:
+```bash
+dotnet build
+```
 
-* Repository Pattern
-* Service Layer
-* Clean Architecture
-* AutoMapper
+## Status
 
-O objetivo deste desafio é aprender Entity Framework Core.
-
----
-
-# Ordem de Desenvolvimento
-
-## Etapa 1
-
-* Criar projeto
-* Instalar pacotes
-* Criar entidade
-* Criar Mapping
-* Criar DbContext
-* Criar Migration
-* Criar Banco
-
----
-
-## Etapa 2
-
-* Criar Menu
-* Implementar Cadastro
-* Implementar Listagem
-* Implementar Busca
-
----
-
-## Etapa 3
-
-* Implementar Atualização
-* Implementar Exclusão
-* Validar regras
-
----
-
-# Testes Obrigatórios
-
-Realizar os seguintes testes:
-
-* Cadastrar cliente válido
-* Cadastrar nome vazio
-* Cadastrar email vazio
-* Cadastrar email duplicado
-* Buscar cliente inexistente
-* Atualizar cliente
-* Atualizar utilizando email já existente
-* Excluir cliente
-* Cancelar exclusão
-* Digitar letras onde é esperado um número
-
----
-
-# Critério de Conclusão
-
-O desafio será considerado concluído quando for possível:
-
-* Criar o banco utilizando Migration
-* Inserir clientes
-* Consultar clientes
-* Atualizar clientes
-* Excluir clientes
-* Explicar o papel de:
-
-  * DbContext
-  * DbSet
-  * Mapping
-  * Migration
-  * SaveChangesAsync
-
-Sem consultar o código ou o curso.
-
----
-
-# Desafio Extra
-
-Após concluir o projeto:
-
-1. Adicione a entidade **Endereço**.
-2. Crie um relacionamento **Cliente 1:N Endereços**.
-3. Atualize o banco utilizando uma nova Migration.
-4. Implemente um CRUD de endereços.
-
-> **Importante:** só faça o desafio extra depois de concluir todo o CRUD de Clientes e entender completamente o fluxo do Entity Framework Core.
+Projeto concluído como exercício de fundamentos do Entity Framework Core e
+LINQ. Melhorias mais avançadas de arquitetura foram deixadas para outros
+projetos, depois da consolidação do acesso a dados.

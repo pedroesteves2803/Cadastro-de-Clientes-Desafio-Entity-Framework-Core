@@ -322,7 +322,7 @@ public static class MenuClienteScreen
                 return;
             }
             
-            Console.Write($"Deseja excluir ({cliente.Nome}) S/N?: ");
+            Console.Write($"Deseja excluir ({cliente.Nome}) S/N?:  ");
 
             if (Console.ReadKey().Key == ConsoleKey.S)
             {
